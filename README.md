@@ -86,3 +86,10 @@ Infrastructure as Code with Terraform: we will use Terraform to define local GCP
                 To veiw details:
                 -   bq show banking-fraud-dev-00215:raw_banking
 
+
+We now have our cloud infrastructure which is live, so we can build an ingestion pipeline (using airflow)
+
+**airflow/dags/ingest_banking_transactions.py**
+This inside this dir/file, we will create a DAG that handles:
+    1. Extracting transaction batches from our local REST API
+    2. Ingesting raw JSON payloads directly into BQ dataset raw_banking, landing table transactions_landing

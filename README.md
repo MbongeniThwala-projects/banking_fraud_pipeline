@@ -49,4 +49,40 @@ Some commands as we go along:
 Did not create this file.
 
 **Terraform (IaC)**
-Infrastructure as Code with Terraform: we will use Terraform to define local GCP infrastructure that airflow pipeline will target for data ingestion and dbt transformation models.
+Infrastructure as Code with Terraform: we will use Terraform to define local GCP infrastructure that airflow pipeline will target for data ingestion and dbt transformation models. After creating the file, we will use the following commands to initialize and create a plan then create and init a GCP project:
+
+                Initialize terraform
+                -   cd terraform && terraform init
+
+                Validate terraform configuration (for sybtax errors or missing arguments)
+                -   terraform validate
+
+                Show the plan
+                -   terraform plan (probably returns a error if not logged in to GCP)
+
+                Connect to a GCP project
+                -   gcloud auth appllication-default login
+
+                Activate the GCP project or create a global unique GCP project ID
+                -   gcloud config set project banking-fraud-pipeline-dev-00215 (should be the same as at in the main.tf)
+                OR
+                - gcloud projects create banking-fraud-dev-00215 --name="Banking Fraud Dev"
+
+                Set the active project and ADC (Application Default Credentials) Quata
+                -   gcloud config set project banking-fraud-dev-00215
+                -   gcloud auth applicatioin-default set-quota-project banking-fraud-dev-00215  
+
+                Enable BigQuery API in GCP
+                gcloud services enable bigquery.googleapis.com --project banking-fraud-dev-00215
+
+                Run Terraform plan
+                -   terrafrom plan
+
+                To provision these datasets on GCP
+                -   terraform apply
+
+                These can be seen in the GCP UI or you can check on the terminal by:
+                -   bq ls --project_id=banking-fraud-dev-00215
+                To veiw details:
+                -   bq show banking-fraud-dev-00215:raw_banking
+

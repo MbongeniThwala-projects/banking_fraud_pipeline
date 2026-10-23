@@ -11,7 +11,7 @@ terraform {
 variable "project_id" {
   type        = string
   description = "GCP Project ID"
-  default     = "banking-fraud-pipeline-dev"
+  default     = "banking-fraud-dev-00215"
 }
 
 variable "region" {

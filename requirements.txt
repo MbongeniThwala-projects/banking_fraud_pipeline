@@ -1,0 +1,6 @@
+apache-airflow==2.9.2
+astromnomer-cosmos==1.4.0
+dbt-core==1.8.0
+dbt-postgres==1.8.0
+requests==2.32.2
+faker==25.2.0

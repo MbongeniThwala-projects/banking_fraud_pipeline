@@ -1,0 +1,24 @@
+# Python & Virtual Env
+venv/
+__pycache__/
+*.pyc
+
+# Terraform local state
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.backup
+terraform/.terraform.lock.hcl
+
+# Airflow local logs
+airflow/logs/
+airflow/airflow.db
+airflow/airflow.cfg
+
+# dbt artifacts
+dbt_banking/target/
+dbt_banking/dbt_packages/
+dbt_banking/logs/
+
+# Secrets
+*.env
+*.json

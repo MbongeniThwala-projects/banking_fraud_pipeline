@@ -9,7 +9,7 @@ from airflow.operators.python import PythonOperator
 GCP_PROJECT_ID = "banking-fraud-dev-00215"
 DATASET_ID = "raw_banking"
 TABLE_ID = "transactions_landing"
-MOCK_API_URL = "http://mock_api:8000/v1/transactions"
+MOCK_API_URL = "http://mock-banking-api:8000/v1/transactions"
 
 default_args = {
     "owner": "airflow",

@@ -11,11 +11,13 @@ x-airflow-common:
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'false'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__DATABASE__LOAD_DEFAULT_CONNECTIONS: 'false'
+    GOOGLE_APPLICATION_CREDENTIALS: /opt/airflow/keys/gcp-key.json
   volumes:
     - ./airflow/dags:/opt/airflow/dags
     - ./airflow/plugins:/opt/airflow/plugins
     - ./airflow/include:/opt/airflow/include
     - ./dbt_banking:/opt/airflow/dbt_banking
+    - ./keys:/opt/airflow/keys
   depends_on:
     postgres:
       condition: service_healthy

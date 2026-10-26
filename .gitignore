@@ -22,3 +22,6 @@ dbt_banking/logs/
 # Secrets
 *.env
 *.json
+secrets/
+
+dbt_banking/target/

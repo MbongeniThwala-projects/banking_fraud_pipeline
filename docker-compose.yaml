@@ -2,7 +2,11 @@ version: '3.8'
 
 x-airflow-common:
   &airflow-common
-  image: apache/airflow:2.9.2-python3.11
+  # image: apache/airflow:2.9.2-python3.11
+  build:
+    context: .
+    dockerfile: dockerfile.airflow
+  image: banking-airflow:latest
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
@@ -17,7 +21,7 @@ x-airflow-common:
     - ./airflow/plugins:/opt/airflow/plugins
     - ./airflow/include:/opt/airflow/include
     - ./dbt_banking:/opt/airflow/dbt_banking
-    - ./keys:/opt/airflow/keys
+    - ./secrets:/opt/airflow/keys:ro
   depends_on:
     postgres:
       condition: service_healthy

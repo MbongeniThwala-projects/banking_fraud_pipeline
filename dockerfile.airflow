@@ -1,0 +1,12 @@
+FROM apache/airflow:2.9.2-python3.11
+
+USER airflow
+
+#dbt lives in its own virtuallenv so it connot conflict with airflows dependencies
+RUN python -m venv /home/airflow/dbt_venv \
+ && /home/airflow/dbt_venv/bin/pip install --no-cache-dir --upgrade pip \
+ && /home/airflow/dbt_venv/bin/pip install --no-cache-dir \
+      "dbt-core>=1.8,<1.9" "dbt-bigquery>=1.8,<1.9"
+
+#Cosmos goes in airflows own envirmment, held to airflows pinned versions
+RUN pip install --no-cache-dir astronomer-cosmos==1.4.0 --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.9.2/constraints-3.11.txt"

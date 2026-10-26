@@ -83,6 +83,6 @@ with DAG(
     # ingest_task = PythonOperator(task_id="fetch_api_and_load_bigquery", python_callable=fetch_and_load_transactions)
     fetch_api_and_load_bigquery = PythonOperator(
         task_id="fetch_api_and_load_bigquery",
-        pyhton_callable=fetch_and_load_transactions
+        python_callable=fetch_and_load_transactions
     )
 

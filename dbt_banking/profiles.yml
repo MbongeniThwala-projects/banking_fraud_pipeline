@@ -1,0 +1,12 @@
+banking_fraud:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: service-account
+      project: banking-fraud-dev-00215
+      dataset: analytics_banking
+      location: africa-south1
+      threads: 4
+      timeout_seconds: 300
+      keyfile: "{{ env_var('GOOGLE_APPLICATION_CREDENTIALS') }}"

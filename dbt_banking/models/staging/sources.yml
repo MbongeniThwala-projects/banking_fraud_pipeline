@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: raw_banking
+    database: banking-fraud-dev-00215
+    schema: raw_banking
+    tables:
+      - name: transactions_landing
+        description: Raw mock banking transactions appended hourly by the Airflow ingestion DAG

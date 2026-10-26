@@ -14,7 +14,7 @@ RISKY_MERCHANTS = ["GAMBLING", "ELECTRONICS", "LUXURY_GOODS"]
 HOME_COUNTRY = "ZA"
 FOREIGN_COUNTRIES = ["RU", "CN", "NG", "GB"]
 
-ACCOUNTS = [(f"ACC-{10000 + 1}", f"CUST-{1000 + 1}") for i in range(50)]
+ACCOUNTS = [(f"ACC-{10000 + i}", f"CUST-{1000 + i}") for i in range(50)]
 
 def build_record(account_id, customer_id, ts, amount, merchant, country, card_present):
     return {

@@ -1,0 +1,45 @@
+name: CI 
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  dbt-parse:
+    runs-on: ubuntu-latest
+    env:
+      GOOGLE_APPLICATION_CREDENTIALS: /tmp/not-a-real-key.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dbt
+        run: pip install "dbt-core>=1.8, <1.9" "dbt-bigquery>=1.8, <1.9"
+      - name: Parse the dbt project
+        run: dbt parse --project-dir dbt_banking --profiles-dir dbt_banking
+
+  dag-integrity:
+    runs-on: ubuntu-latest
+    env:
+      GOOGLE_APPLICATION_CREDENTIALS: /tmp/not-a-real-key.json
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      DBT_PROJECT_PATH: ${{ github.workspace }}/dbt_banking
+      DBT_EXECUTABLE: /tmp/dbt_venv/bin/dbt
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dbt in its own virtualenv
+        run: |
+          python -m venv /tmp/dbt_venv
+          /tmp/dbt_venv/bin/pip install "dbt=core>=1.8,<1.9" "dbt-bigquery>=1.8,<1.9"
+      - name: Install Airflow and Cosmos
+        run: |
+          CONSTRAINTS="https://raw.githubusercontent.com/apache/Airflow/constraints-2.9.2/constraints-3.11.txt"
+          pip install "apache-airflow==2.9.2" --constraints "$CONSTRAINTS"
+          pip install astronomer-cosmos==1.4.0 google-cloud-bigquery requests pytest --constraints "$CONSTRAINTS"
+      - name: Test the DAGs 
+        run: pytest tests/test_dag_integrity.py -q

@@ -1,3 +1,5 @@
+import os
+
 from datetime import datetime, timedelta, timezone
 import requests
 from google.cloud import bigquery
@@ -15,8 +17,8 @@ BQ_LOCATION = "africa-south1"
 MOCK_API_URL = "http://mock-banking-api:8000/v1/transactions"
 BATCH_SIZE = 100
 
-DBT_PROJECT_PATH = "/opt/airflow/dbt_banking"
-DBT_EXECUTABLE = "/home/airflow/dbt_venv/bin/dbt"
+DBT_PROJECT_PATH = os.environ.get("DBT_PROJECT_PATH", "/opt/airflow/dbt_banking")
+DBT_EXECUTABLE = os.environ.get("DBT_EXECUTABLE", "/home/airflow/dbt_venv/bin/dbt")
 
 SCHEMA = [
     bigquery.SchemaField("transaction_id", "STRING"),
@@ -32,12 +34,67 @@ SCHEMA = [
     bigquery.SchemaField("ingested_at", "TIMESTAMP")
 ]
 
+ALERT_EMAIL = os.environ.get("ALERT_EMAIL")
+FAILURES_TABLE_ID = "pipeline_failures"
+FAILURES_SCHEMA = [
+    bigquery.SchemaField("failed_at", "TIMESTAMP"),
+    bigquery.SchemaField("dag_id", "STRING"),
+    bigquery.SchemaField("task_id", "STRING"),
+    bigquery.SchemaField("run_id", "STRING"),
+    bigquery.SchemaField("try_number", "INTEGER"),
+    bigquery.SchemaField("error_message", "STRING"),
+    bigquery.SchemaField("log_url", "STRING"),
+]
+
+def notify_failure(context):
+    '''runs once a task has failed andd used up its retries: logs to BigQuery and emails.'''
+    ti = context["task_instance"]
+    exception = context.get("exception")
+    row = {
+        "failed_at": datetime.now(timezone.utc).isoformat(),
+        "dag_id": ti.dag_id,
+        "task_id": ti.task_id,
+        "run_id": context.get("run_id"),
+        "try_number": ti.try_number,
+        "error_message": str(exception)[:1000] if exception else None,
+        "log_url": ti.log_url,
+    }
+
+    # each channel is wrapped separately so one failing does not block the other
+    try:
+        client = bigquery.Client(project=GCP_PROJECT_ID, location=BQ_LOCATION)
+        job_config = bigquery.LoadJobConfig(
+            schema=FAILURES_SCHEMA,
+            write_disposition=bigquery.WriteDisposition.WRITE_APPEND,
+            create_disposition=bigquery.CreateDisposition.CREATE_IF_NEEDED
+        )
+        client.load_table_from_json(
+            [row], f"{GCP_PROJECT_ID}.{DATASET_ID}.{FAILURES_TABLE_ID}", job_config=job_config
+        ).result()
+    except Exception as err:
+        print(f"Could not write failure to BigQuery: {err}")
+
+    try:
+        if ALERT_EMAIL:
+            send_email(
+                to=ALERT_EMAIL,
+                subject=f"[Airflow] {ti.dag_id}.{ti.task_id} failed",
+                html_content=(
+                    f"<p>Task <b>{ti.task_id}</b> in DAG <b>{ti.dag_id}</b> failed.</p>"
+                    f"<p>Run: {row['run_id']}<br>Error: {row['error_message']}</p>"
+                    f"<p><a href=\"{row['log_url']}\">Open the task log</a></p>"
+                ),
+            )
+    except Exception as err:
+        print(f"Could not send failure email: {err}")
+
 default_args = {
     "owner": "airflow",
     "depends_on_past": False,
     # "email_on_failure": False, #we'll read on cost of being true
     "retries": 2,
-    "retry_delay": timedelta(minutes=1)
+    "retry_delay": timedelta(minutes=1),
+    "on_failure_callback": notify_failure
 }
 
 profile_config = ProfileConfig(

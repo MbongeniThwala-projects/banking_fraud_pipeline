@@ -28,7 +28,7 @@ cleaned as (
             when 'US' then 'Norht America'
             when 'RU' then 'Eastern Europe'
             else "Other"
-        end as ip_regioin,
+        end as ip_region,
         card_present_flag,
         ingested_at
     from deduplicated

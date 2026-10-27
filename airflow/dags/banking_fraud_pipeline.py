@@ -3,6 +3,8 @@ import requests
 from google.cloud import bigquery
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+from cosmos import DbtTaskGroup, ExecutionConfig, ProfileConfig, ProjectConfig, RenderConfig
+from cosmos.constants import LoadMode
 
 
 #Infrastructure configurations providioned vai Terraform
@@ -12,6 +14,9 @@ TABLE_ID = "transactions_landing"
 BQ_LOCATION = "africa-south1"
 MOCK_API_URL = "http://mock-banking-api:8000/v1/transactions"
 BATCH_SIZE = 100
+
+DBT_PROJECT_PATH = "/opt/airflow/dbt_banking"
+DBT_EXECUTABLE = "/home/airflow/dbt_venv/bin/dbt"
 
 SCHEMA = [
     bigquery.SchemaField("transaction_id", "STRING"),
@@ -34,6 +39,12 @@ default_args = {
     "retries": 2,
     "retry_delay": timedelta(minutes=1)
 }
+
+profile_config = ProfileConfig(
+    profile_name="banking_fraud",
+    target_name="dev",
+    profiles_yml_filepath=f"{DBT_PROJECT_PATH}/profiles.yml",
+)
 
 #taking the data and loading it to tables in BQ
 def fetch_and_load_transactions(**context):
@@ -72,13 +83,14 @@ def fetch_and_load_transactions(**context):
     return len(records)
 
 with DAG(
-    dag_id="ingest_banking_transactions",
+    dag_id="banking_fraud_pipeline",
     default_args=default_args,
-    description="Batch extraction of mock bankoing transactioins into GCP Bigquery raw landing zone",
+    description="Ingests mock banking transactions, then runs and tests the dbt models",
     schedule_interval="@hourly",
     start_date=datetime(2026, 10, 1),
     catchup=False,
-    tags=["banking", "ingestions", "raw"]
+    max_active_runs=1,
+    tags=["banking", "ingestions", "dbt"]
 ) as dag:
     # ingest_task = PythonOperator(task_id="fetch_api_and_load_bigquery", python_callable=fetch_and_load_transactions)
     fetch_api_and_load_bigquery = PythonOperator(
@@ -86,3 +98,17 @@ with DAG(
         python_callable=fetch_and_load_transactions
     )
 
+    dbt_transform = DbtTaskGroup(
+        group_id="dbt_transform",
+        project_config=ProjectConfig(DBT_PROJECT_PATH),
+        profile_config=profile_config,
+        execution_config=ExecutionConfig(dbt_executable_path=DBT_EXECUTABLE),
+        render_config=RenderConfig(
+            load_method=LoadMode.DBT_LS,
+            dbt_executable_path=DBT_EXECUTABLE,
+            dbt_deps=False,
+            emit_datasets=False
+        )
+    )
+
+    fetch_api_and_load_bigquery >> dbt_transform

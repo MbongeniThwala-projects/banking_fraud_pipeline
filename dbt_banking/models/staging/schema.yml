@@ -1,0 +1,29 @@
+version: 2
+
+models:
+  - name: stg_bank_transactions
+    description: Deduplicated, typed transactions from the raw landing table
+    columns:
+      - name: transaction_id
+        data_tests:
+          - unique
+          - not_null
+      - name: account_id
+        data_tests:
+          - not_null
+      - name: transaction_timestamp
+        data_tests:
+          - not_null
+      - name: transaction_amount
+        data_tests:
+          - not_null
+      - name: ip_country_code
+        data_tests:
+          - accepted_values:
+              values: ["ZA", "RU", "CN", "NG", "GB"]
+              config: 
+                severity: warn
+      - name: ip_region
+        data_tests:
+          - accepted_values:
+              values: ["Southern Africa", "North America", "Eastern Europe", "Other"]

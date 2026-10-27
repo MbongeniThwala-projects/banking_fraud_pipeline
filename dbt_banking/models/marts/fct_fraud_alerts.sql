@@ -12,7 +12,7 @@ alerts as (
         transaction_type,
         merchant_category_code,
         ip_country_code,
-        ip_regioin,
+        ip_region,
         card_present_flag,
         transaction_count_past_1h,
         total_spend_past_1h,

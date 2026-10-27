@@ -1,0 +1,13 @@
+version: 2
+
+models:
+  - name: int_account_rolling_velocity
+    description: One row per transaction with 1-hour rolling features and a risk score
+    columns:
+      - name: transaction_id
+        data_tests:
+          - unique
+          - not_null
+      - name: fraud_risk_score
+        data_tests:
+          -  not_null

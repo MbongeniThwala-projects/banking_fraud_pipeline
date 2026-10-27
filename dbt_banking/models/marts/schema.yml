@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: fct_fraud_alerts
+    description: transactions with a fraud risk score of 20 or more, with severity and reasons
+    columns:
+      - name: transaction_id
+        data_tests:
+          - unique
+          - not_null
+      - name: fraud_risk_score
+        data_tests:
+          - not_null
+      - name: alert_severity
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ["CRITICAL", "HIGH", "MEDIUM"]
+      - name: alert_reasons
+        data_tests:
+          - not_null
+  

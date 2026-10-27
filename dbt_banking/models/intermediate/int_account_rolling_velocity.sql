@@ -9,7 +9,7 @@ with transactions as (
         merchant_category_code,
         device_ip,
         ip_country_code,
-        ip_regioin,
+        ip_region,
         card_present_flag,
         ingested_at
     from {{ ref('stg_bank_transactions') }}
@@ -63,7 +63,7 @@ combined as (
     inner join previous_transaction as p on t.transaction_id = p.transaction_id
 ),
 
-scored as (
+flagged as (
     select
         *,
         transaction_count_past_1h >= 5 as is_high_frequency_velocity,
@@ -71,14 +71,22 @@ scored as (
         (
             prev_ip_country_code is not null
             and ip_country_code != prev_ip_country_code
-            and mins_since_last_transaction < 15
-        ) as is_impossible_travel,
-        (
-            case when transaction_count_past_1h >= 5 then 30 else 0 end
-            + case when total_spend_past_1h >= 10000 then 25 else 0 end
-            + case when distinct_countries_past_1h > 1 then 25 else 0 end
-            + case when card_present_flag = false and transaction_amount > 2500 then 20 else 0 end
-        ) as fraud_risk_score
+            and mins_since_last_transaction < 15            
+        ) as is_impossible_travel
     from combined
+),
+
+scored as (
+    select 
+        *,
+        least(100, (
+            case when is_high_frequency_velocity then 30 else 0 end
+            + case when is_high_value_velocity then 25 else 0 end
+            + case when distinct_countries_past_1h > 1 then 25 else 0 end
+            + case when is_impossible_travel then 25 else 0 end
+            + case when card_present_flag = false and transaction_amount > 2500 then 20 else 0 end
+        )) as fraud_risk_score
+    from flagged
 )
+
 select * from scored

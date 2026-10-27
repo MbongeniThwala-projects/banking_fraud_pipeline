@@ -16,7 +16,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install dbt
-        run: pip install "dbt-core>=1.8, <1.9" "dbt-bigquery>=1.8, <1.9"
+        run: pip install "dbt-core>=1.8,<1.9" "dbt-bigquery>=1.8,<1.9"
       - name: Parse the dbt project
         run: dbt parse --project-dir dbt_banking --profiles-dir dbt_banking
 
@@ -38,8 +38,8 @@ jobs:
           /tmp/dbt_venv/bin/pip install "dbt-core>=1.8,<1.9" "dbt-bigquery>=1.8,<1.9"
       - name: Install Airflow and Cosmos
         run: |
-          CONSTRAINTS="https://raw.githubusercontent.com/apache/Airflow/constraints-2.9.2/constraints-3.11.txt"
-          pip install "apache-airflow==2.9.2" --constraints "$CONSTRAINTS"
-          pip install astronomer-cosmos==1.4.0 google-cloud-bigquery requests pytest --constraints "$CONSTRAINTS"
+          CONSTRAINTS="https://raw.githubusercontent.com/apache/airflow/constraints-2.9.2/constraints-3.11.txt"
+          pip install "apache-airflow==2.9.2" --constraint "$CONSTRAINTS"
+          pip install astronomer-cosmos==1.4.0 google-cloud-bigquery requests pytest --constraint "$CONSTRAINTS"
       - name: Test the DAGs 
         run: pytest tests/test_dag_integrity.py -q
